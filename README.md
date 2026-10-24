@@ -1,6 +1,7 @@
 # deepsearch
 
 一个本地运行的 Google 风格搜索页面，后端调用 DeepSeek 的 **Search API** 与 **Fetch API**。没有前端框架、没有第三方运行时依赖，Node.js 直接启动。
+适合作为百度、bing 的替代品，干净无广告，完全按照匹配度排名。
 
 ![搜索结果页面](docs/search-results.png)
 
