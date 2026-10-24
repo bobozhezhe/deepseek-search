@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="description" content="由 DeepSeek Search 与 Fetch API 驱动的本地搜索界面">
+    <title>deepsearch</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <noscript>
+      <div class="noscript">此页面需要启用 JavaScript 才能搜索。</div>
+    </noscript>
+
+    <section class="page home-page" id="home-view">
+      <header class="home-topbar">
+        <div class="topbar-links">
+          <a class="topbar-link" href="https://api-docs.deepseek.com/guides/search/" target="_blank" rel="noopener noreferrer">
+            API 文档
+            <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>
+            </svg>
+          </a>
+          <span class="topbar-separator" aria-hidden="true"></span>
+          <span class="local-status" id="home-status">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="home-status-text">正在检查本地服务</span>
+          </span>
+          <button class="icon-button theme-toggle" type="button" aria-label="切换深色模式" title="切换深色模式">
+            <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/>
+            </svg>
+            <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="home-main">
+        <div class="home-content">
+          <h1 class="logo logo--home" aria-label="deepsearch">
+            <span aria-hidden="true">
+              <span class="logo-letter logo-letter--blue">d</span><span class="logo-letter logo-letter--red">e</span><span class="logo-letter logo-letter--yellow">e</span><span class="logo-letter logo-letter--blue">p</span><span class="logo-letter logo-letter--green">s</span><span class="logo-letter logo-letter--red">e</span><span class="logo-letter logo-letter--blue">a</span><span class="logo-letter logo-letter--yellow">r</span><span class="logo-letter logo-letter--green">c</span><span class="logo-letter logo-letter--red">h</span>
+            </span>
+          </h1>
+
+          <form class="search-form search-form--home" id="home-form" role="search" novalidate>
+            <label class="sr-only" for="home-input">搜索网页</label>
+            <svg class="icon search-leading-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8"></circle>
+              <path d="m16 16 4.2 4.2"></path>
+            </svg>
+            <input
+              class="search-input"
+              id="home-input"
+              name="q"
+              type="search"
+              placeholder="搜索网页，或输入 site:、after: 等条件"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              maxlength="128"
+              enterkeyhint="search"
+            >
+            <button class="clear-button" type="button" aria-label="清空搜索框" title="清空" hidden>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6 6 18"></path>
+              </svg>
+            </button>
+            <kbd class="shortcut-hint" aria-hidden="true">/</kbd>
+          </form>
+
+          <div class="home-actions">
+            <button class="button button--primary" type="submit" form="home-form">DeepSeek 搜索</button>
+            <button class="button button--secondary" type="button" id="lucky-button">手气不错</button>
+          </div>
+
+          <div class="home-key-warning" id="home-key-warning" hidden>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 8v5M12 16.5v.1"></path>
+            </svg>
+            <div>
+              <strong>还需要配置 API Key</strong>
+              <span>把 <code>DEEPSEEK_API_KEY</code> 写入项目根目录的 <code>.env</code>，再重启服务。</span>
+            </div>
+          </div>
+
+          <p class="home-note">
+            由 DeepSeek 自研搜索引擎提供 · 支持
+            <code>site:</code>
+            <code>lang:</code>
+            <code>after:</code>
+            <code>before:</code>
+            <code>"精确短语"</code>
+          </p>
+        </div>
+      </main>
+
+      <footer class="home-footer">
+        <span class="footer-item">
+          <span class="status-dot" aria-hidden="true"></span>
+          仅在本机运行
+        </span>
+        <span class="footer-item footer-item--right">
+          <a href="https://api-docs.deepseek.com/guides/search/" target="_blank" rel="noopener noreferrer">DeepSeek Search &amp; Fetch API</a>
+          <span aria-hidden="true">·</span>
+          <span>每次搜索约 $0.00075</span>
+        </span>
+      </footer>
+    </section>
+
+    <section class="page results-page" id="results-view" hidden>
+      <header class="results-header">
+        <div class="results-header-inner">
+          <a class="logo logo--small" href="/" aria-label="返回 deepsearch 首页">
+            <span aria-hidden="true">
+              <span class="logo-letter logo-letter--blue">d</span><span class="logo-letter logo-letter--red">e</span><span class="logo-letter logo-letter--yellow">e</span><span class="logo-letter logo-letter--blue">p</span><span class="logo-letter logo-letter--green">s</span><span class="logo-letter logo-letter--red">e</span><span class="logo-letter logo-letter--blue">a</span><span class="logo-letter logo-letter--yellow">r</span><span class="logo-letter logo-letter--green">c</span><span class="logo-letter logo-letter--red">h</span>
+            </span>
+          </a>
+
+          <form class="search-form search-form--results" id="results-form" role="search" novalidate>
+            <label class="sr-only" for="results-input">搜索网页</label>
+            <svg class="icon search-leading-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8"></circle>
+              <path d="m16 16 4.2 4.2"></path>
+            </svg>
+            <input
+              class="search-input"
+              id="results-input"
+              name="q"
+              type="search"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              maxlength="128"
+              enterkeyhint="search"
+            >
+            <button class="clear-button" type="button" aria-label="清空搜索框" title="清空" hidden>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6 6 18"></path>
+              </svg>
+            </button>
+          </form>
+
+          <div class="results-header-actions">
+            <span class="service-badge">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span class="service-badge-text">DeepSeek</span>
+            </span>
+            <button class="icon-button theme-toggle" type="button" aria-label="切换深色模式" title="切换深色模式">
+              <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/>
+              </svg>
+              <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <nav class="results-tabs" aria-label="搜索结果筛选">
+        <div class="results-tabs-inner">
+          <button class="tab" type="button" data-tab="all" aria-selected="true">全部</button>
+          <button class="tab" type="button" data-tab="recent" aria-selected="false">最新</button>
+          <a class="tabs-doc-link" href="https://api-docs.deepseek.com/guides/search/" target="_blank" rel="noopener noreferrer">
+            高级搜索语法
+            <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>
+            </svg>
+          </a>
+        </div>
+      </nav>
+
+      <main class="results-main" id="results-main">
+        <div class="results-column">
+          <p class="search-meta" id="search-meta" aria-live="polite"></p>
+
+          <div class="inline-error inline-error--key" id="key-error" hidden>
+            <h2>配置 DeepSeek API Key 后即可搜索</h2>
+            <p>在项目根目录创建 <code>.env</code> 文件，写入：</p>
+            <pre><code>DEEPSEEK_API_KEY=sk-你的密钥</code></pre>
+            <p>保存后重启 <code>npm start</code>。密钥只保存在本地服务端，不会发送到浏览器。</p>
+            <div class="inline-error-actions">
+              <a class="button button--primary" href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">获取 API Key</a>
+              <button class="button button--secondary" type="button" data-action="reload">重新检查</button>
+            </div>
+          </div>
+
+          <div class="inline-error" id="error-state" hidden>
+            <h2 id="error-title">搜索时发生错误</h2>
+            <p id="error-message"></p>
+            <div class="inline-error-actions">
+              <button class="button button--primary" type="button" data-action="retry">重试</button>
+            </div>
+          </div>
+
+          <div class="empty-state" id="empty-state" hidden>
+            <div class="empty-illustration" aria-hidden="true">
+              <svg viewBox="0 0 160 120">
+                <circle cx="70" cy="56" r="37"></circle>
+                <path d="m97 83 24 24"></path>
+                <path d="M55 45h30M55 57h22"></path>
+              </svg>
+            </div>
+            <h2>找不到与“<span id="empty-query"></span>”相关的结果</h2>
+            <p>请检查拼写，减少筛选条件，或尝试其他关键词。</p>
+          </div>
+
+          <div class="skeleton-list" id="skeleton-list" hidden aria-label="正在搜索">
+            <div class="skeleton-result">
+              <div class="skeleton-line skeleton-line--source"></div>
+              <div class="skeleton-line skeleton-line--title"></div>
+              <div class="skeleton-line skeleton-line--text"></div>
+              <div class="skeleton-line skeleton-line--text short"></div>
+            </div>
+            <div class="skeleton-result">
+              <div class="skeleton-line skeleton-line--source"></div>
+              <div class="skeleton-line skeleton-line--title shorter"></div>
+              <div class="skeleton-line skeleton-line--text"></div>
+              <div class="skeleton-line skeleton-line--text short"></div>
+            </div>
+            <div class="skeleton-result">
+              <div class="skeleton-line skeleton-line--source"></div>
+              <div class="skeleton-line skeleton-line--title"></div>
+              <div class="skeleton-line skeleton-line--text"></div>
+            </div>
+          </div>
+
+          <section class="results-list" id="results-list" aria-label="搜索结果"></section>
+
+          <nav class="pagination" id="pagination" aria-label="分页" hidden></nav>
+
+          <footer class="results-footer">
+            <span>DeepSeek Search &amp; Fetch API</span>
+            <span aria-hidden="true">·</span>
+            <span>结果由 DeepSeek 提供，仅在本机运行</span>
+          </footer>
+        </div>
+      </main>
+    </section>
+
+    <div class="reader-backdrop" id="reader-backdrop" hidden></div>
+    <aside
+      class="reader-drawer"
+      id="reader-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reader-title"
+      hidden
+    >
+      <div class="reader-header">
+        <div class="reader-heading">
+          <span class="reader-kicker">
+            <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 3h9l5 5v13H5z"></path>
+              <path d="M14 3v5h5M8 13h8M8 17h6"></path>
+            </svg>
+            DeepSeek Fetch 网页预览
+          </span>
+          <span class="reader-host" id="reader-host"></span>
+        </div>
+        <div class="reader-actions">
+          <a class="reader-open-link" id="reader-open-link" href="#" target="_blank" rel="noopener noreferrer">
+            打开原文
+            <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>
+            </svg>
+          </a>
+          <button class="icon-button" id="reader-close" type="button" aria-label="关闭预览" title="关闭预览">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="reader-scroll">
+        <h2 class="reader-title" id="reader-title"></h2>
+        <div class="reader-meta" id="reader-meta"></div>
+        <div class="reader-loading" id="reader-loading" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          <span>正在通过 DeepSeek Fetch 抓取网页…</span>
+        </div>
+        <div class="reader-error" id="reader-error" hidden>
+          <p id="reader-error-message"></p>
+          <button class="button button--secondary" type="button" id="reader-retry">重试</button>
+        </div>
+        <article class="reader-content" id="reader-content"></article>
+      </div>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  </body>
+</html>

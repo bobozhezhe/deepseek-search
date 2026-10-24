@@ -1,0 +1,14 @@
+{
+  "name": "deepseek-search-local",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A local Google-style web search UI powered by the DeepSeek Search & Fetch API.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
